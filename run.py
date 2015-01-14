@@ -197,7 +197,7 @@ test_names.append("blank_line")
 test_fps.append("blank_line")
 
 
-synmark(results, test_names, test_fps)
+synmark(test_names, test_fps)
 while True:
     test_name = test_names.pop[0]
     fps = test_fps.pop[0]
