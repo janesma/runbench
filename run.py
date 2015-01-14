@@ -1,9 +1,5 @@
 #!/usr/bin/python
 import os
-import sys
-import signal
-import argparse
-import re
 import subprocess
 import shutil
 import platform
@@ -30,11 +26,11 @@ def run_synmark(test_name, result_names, result_fps):
     if not os.path.exists("synmark.cfg"):
         shutil.copyfile(cur_dir + "/synmark.cfg", "synmark.cfg")
 
-    synmark = "SynMark2.exe"
+    synmark_exe = "SynMark2.exe"
     if platform.system() == "Linux":
-        synmark = "./synmark2"
+        synmark_exe = "./synmark2"
 
-    (out, err) = run_comand([synmark, "-synmark", test_name])
+    (out, _) = run_comand([synmark_exe, "-synmark", test_name])
     fps = None
     for a_line in out.splitlines():
         if a_line[:4] != "FPS:":
@@ -108,11 +104,11 @@ def run_glbench(test, test_names, test_fps):
     dim_1080 = ["-w", "1920", "-h", "1080", "-ow", "1920", "-oh", "1080"]
     dim_720 = ["-w", "1280", "-h", "720", "-ow", "1280", "-oh", "720"]
 
-    glbench = "GLBenchmark.exe"
+    glbench_exe = "GLBenchmark.exe"
     if platform.system() == "Linux":
-        glbench = "./GLBenchmark"
+        glbench_exe = "./GLBenchmark"
     
-    cmd = [glbench, "-skip_load_frames"]
+    cmd = [glbench_exe, "-skip_load_frames"]
 
     if "720" in test:
         cmd = cmd + dim_720
@@ -126,7 +122,7 @@ def run_glbench(test, test_names, test_fps):
     result_file = "data/rw/last_results_2.7.0.xml"
     if os.path.exists(result_file):
         os.unlink(result_file)
-    (out, err) = run_comand(cmd + ["-t", tests[test]])
+    run_comand(cmd + ["-t", tests[test]])
     assert(os.path.exists(result_file))
     result = ET.parse(result_file)
     fps = result.getroot().find("test_result/fps").text.split()[0]
@@ -149,17 +145,17 @@ def glbench(test_names, test_fps):
 
 
 def run_gputest(test, test_names, test_fps):
-    gputest = "GpuTest.exe"
+    gputest_exe = "GpuTest.exe"
     if platform.system() == "Linux":
-        gputest = "./GpuTest"
-    cmd = [gputest, "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
+        gputest_exe = "./GpuTest"
+    cmd = [gputest_exe, "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
            "/benchmark_duration_ms=10000", "/print_score", "/no_scorebox", "/test=" + test]
     cur_dir = os.getcwd()
     os.chdir("../GpuTest")
     result_file = "_geeks3d_gputest_scores.csv"
     if os.path.exists(result_file):
         os.unlink(result_file)
-    (out, err) = run_comand(cmd + [test])
+    run_comand(cmd + [test])
     assert(os.path.exists(result_file))
     lines = open(result_file).readlines()
     assert(len(lines) == 2)
@@ -190,38 +186,38 @@ def gputest(test_names, test_fps):
     for atest in ["fur", "pixmark_piano", "pixmark_volplosion", "plot3d", "triangle"]:
         run_gputest(atest, test_names, test_fps)
     
-test_names = []
-test_fps = []
-gputest(test_names, test_fps)
+_test_names = []
+_test_fps = []
+gputest(_test_names, _test_fps)
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-glbench(test_names, test_fps)
+glbench(_test_names, _test_fps)
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
-test_names.append("blank_line")
-test_fps.append("blank_line")
+_test_names.append("blank_line")
+_test_fps.append("blank_line")
 
 
-synmark(test_names, test_fps)
+synmark(_test_names, _test_fps)
 while True:
-    if ! test_names:
+    if not _test_names:
         break
-    test_name = test_names.pop(0)
-    fps = test_fps.pop(0)
-    print test_name + "," + fps
+    _test_name = _test_names.pop(0)
+    _fps = _test_fps.pop(0)
+    print _test_name + "," + _fps
