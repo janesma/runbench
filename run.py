@@ -13,7 +13,7 @@ def run_comand(command_list):
     (out, err) = p.communicate()
     return(out, err)
 
-def run_synmark(test_name, result_dict):
+def run_synmark(test_name, result_names, result_fps):
     cur_dir = os.getcwd()
 
     os.chdir("../SynMark2")
@@ -27,22 +27,14 @@ def run_synmark(test_name, result_dict):
             continue
         tokens = a_line.split()
         fps = tokens[1]
-    result_dict[test_name] = fps
+    if fps == None:
+        fps = "fail"
+    result_names.append(test_name)
+    result_fps.append(fps)
     os.chdir(cur_dir)
 
-def synmark(result_dict):
-    tests = ["OglFillPixel",
-             "OglFillTexMulti",
-             "OglFillTexSingle",
-             "OglTexFilterAniso",
-             "OglTexFilterTri",
-             "OglTexMem128",
-             "OglTexMem512",
-             "OglGeomPoint",
-             "OglGeomTriList",
-             "OglGeomTriStrip",
-             "OglZBuffer",
-             "OglBatch0",
+def synmark(result_names, result_fps):
+    tests = ["OglBatch0",
              "OglBatch1",
              "OglBatch2",
              "OglBatch3",
@@ -50,44 +42,65 @@ def synmark(result_dict):
              "OglBatch5",
              "OglBatch6",
              "OglBatch7",
-             "OglVSDiffuse1",
-             "OglVSDiffuse8",
-             "OglVSTangent",
-             "OglVSInstancing",
-             "OglPSPhong",
+             "OglCSCloth",
+             "OglCSDof",
+             "OglDeferred",
+             "OglDeferredAA",
+             "OglDrvCtx",
+             "OglDrvRes",
+             "OglDrvShComp",
+             "OglDrvState",
+             "OglFillPixel",
+             "OglFillTexMulti",
+             "OglFillTexSingle",
+             "OglGSCloth",
+             "OglGeomPoint",
+             "OglGeomTriList",
+             "OglGeomTriStrip",
+             "OglHdrBloom",
+             "OglMultithread",
+             "OglOclCloth",
+             "OglOclDof",
              "OglPSBump2",
              "OglPSBump8",
+             "OglPSPhong",
              "OglPSPom",
              "OglShMapPcf",
              "OglShMapVsm",
-             "OglCSCloth",
-             "OglOclCloth",
-             "OglCSDof",
-             "OglOclDof",
-             "OglDeferred",
-             "OglDeferredAA",
-             "OglHdrBloom",
-             "OglMultithread",
-             "OglTerrainPanInst",
              "OglTerrainFlyInst",
-             "OglTerrainPanTess",
              "OglTerrainFlyTess",
-             "OglDrvState",
-             "OglDrvShComp",
-             "OglDrvRes",
-             "OglDrvCtx"]
+             "OglTerrainPanInst",
+             "OglTerrainPanTess",
+             "OglTexFilterAniso",
+             "OglTexFilterTri",
+             "OglTexMem128",
+             "OglTexMem512",
+             "OglVSDiffuse1",
+             "OglVSDiffuse8",
+             "OglVSInstancing",
+             "OglVSTangent",
+             "OglZBuffer"]
 
     for atest in tests:
-        run_synmark(atest, result_dict)
+        run_synmark(atest, result_names, result_fps)
 
-def run_glbench(test, results):
+def run_glbench(test, test_names, test_fps):
+    orig_test_name = test
     tests = {"Egypt" : "GLB27_EgyptHD_inherited_C24Z16_FixedTime",
              "Egypt_Offscreen" : "GLB27_EgyptHD_inherited_C24Z16_FixedTime_Offscreen",
              "TRex" : "GLB27_TRex_C24Z16_FixedTimeStep",
              "TRex_Offscreen" : "GLB27_TRex_C24Z16_FixedTimeStep_Offscreen"}
 
-    cmd = ["GLBenchmark.exe", "-skip_load_frames", "-w", "1920", "-h", "1080", "-ow", 
-           "1920", "-oh", "1080", "-t"]
+    dim_1080 = ["-w", "1920", "-h", "1080", "-ow", "1920", "-oh", "1080"]
+    dim_720 = ["-w", "1280", "-h", "720", "-ow", "1280", "-oh", "720"]
+
+    cmd = ["GLBenchmark.exe", "-skip_load_frames"]
+
+    if "720" in test:
+        cmd = cmd + dim_720
+        test = test[:-3]
+    else:
+        cmd = cmd + dim_1080
 
     cur_dir = os.getcwd()
     os.chdir("../GLBenchMark")
@@ -95,23 +108,29 @@ def run_glbench(test, results):
     result_file = "data/rw/last_results_2.7.0.xml"
     if os.path.exists(result_file):
         os.unlink(result_file)
-    (out, err) = run_comand(cmd + [tests[test]])
+    (out, err) = run_comand(cmd + ["-t", tests[test]])
     assert(os.path.exists(result_file))
     result = ET.parse(result_file)
     fps = result.getroot().find("test_result/fps").text.split()[0]
-    results[test] = fps
+    test_names.append(orig_test_name)
+    test_fps.append(fps)
     os.chdir(cur_dir)
 
-def glbench(results):
-    tests = ["Egypt",
-             "Egypt_Offscreen",
-             "TRex",
-             "TRex_Offscreen"]
+def glbench(test_names, test_fps):
+    tests = ["TRex",
+             "TRex720",
+             "TRex_Offscreen",
+             "Egypt",
+             "Egypt720",
+             "Egypt_Offscreen"]
+             # "Manhattan",
+             # "Manhattan_Offscreen"]
+
     for atest in tests:
-        run_glbench(atest, results)
+        run_glbench(atest, test_names, test_fps)
 
 
-def run_gputest(test, results):
+def run_gputest(test, test_names, test_fps):
     cmd = ["GpuTest.exe", "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
            "/benchmark_duration_ms=10000", "/print_score", "/no_scorebox", "/test=" + test]
     cur_dir = os.getcwd()
@@ -123,26 +142,63 @@ def run_gputest(test, results):
     assert(os.path.exists(result_file))
     lines = open(result_file).readlines()
     assert(len(lines) == 2)
-    tokens = lines[0].split(",")
+    tokens = lines[0].strip().split(",")
     assert(len(tokens) == 11)   
+    fps_index = None
+    score_index = None
     index = 0
     for token in tokens:
         if token == "AvgFPS":
-            break
+            fps_index = index
+        if token == "Score":
+            score_index = index
         index = index + 1
-    assert(index == 7)
+    assert(fps_index == 7)
+    assert(score_index == 10)
 
-    tokens = lines[1].split(",")
-    results[test] = tokens[index]
+    tokens = lines[1].strip().split(",")
+    test_names.append(test + "_fps")
+    test_fps.append(tokens[fps_index])
+
+    test_names.append(test + "_score")
+    test_fps.append(tokens[score_index])
+
     os.chdir(cur_dir)
 
-def gputest(results):
-    for atest in ["fur", "plot3d", "triangle"]:
-        run_gputest(atest, results)
+def gputest(test_names, test_fps):
+    for atest in ["fur", "pixmark_piano", "pixmark_volplosion", "plot3d", "triangle"]:
+        run_gputest(atest, test_names, test_fps)
     
-results = {}
-synmark(results)
-glbench(results)
-gputest(results)
-for (k,v) in results.items():
-    print k + ":" + v
+test_names = []
+test_fps = []
+gputest(test_names, test_fps)
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+glbench(test_names, test_fps)
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+test_names.append("blank_line")
+test_fps.append("blank_line")
+
+
+synmark(results, test_names, test_fps)
+while True:
+    test_name = test_names.pop[0]
+    fps = test_fps.pop[0]
+    print test_name + "," + fps
