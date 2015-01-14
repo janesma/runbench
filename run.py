@@ -3,12 +3,14 @@ import os
 import subprocess
 import shutil
 import platform
+import time
 import xml.etree.ElementTree as ET
 
 
 print "running benchmarks"
 
 def run_comand(command_list):
+    time.sleep(2)
     env = dict(os.environ.items())
     if platform.system() == "Linux":
         env["vblank_mode"] = "0"
