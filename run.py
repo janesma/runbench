@@ -1,13 +1,23 @@
 #!/usr/bin/python
-import os, sys, signal, argparse, re, subprocess
+import os
+import sys
+import signal
+import argparse
+import re
+import subprocess
 import shutil
+import platform
 import xml.etree.ElementTree as ET
 
 
 print "running benchmarks"
 
 def run_comand(command_list):
+    env = dict(os.environ.items())
+    if platform.system() == "Linux":
+        env["vblank_mode"] = "0"
     p = subprocess.Popen(command_list,
+                         env=env,
                          stdout=subprocess.PIPE, 
                          stderr=subprocess.PIPE)
     (out, err) = p.communicate()
@@ -20,7 +30,11 @@ def run_synmark(test_name, result_names, result_fps):
     if not os.path.exists("synmark.cfg"):
         shutil.copyfile(cur_dir + "/synmark.cfg", "synmark.cfg")
 
-    (out, err) = run_comand(["SynMark2.exe", "-synmark", test_name])
+    synmark = "SynMark2.exe"
+    if platform.system() == "Linux":
+        synmark = "./synmark2"
+
+    (out, err) = run_comand([synmark, "-synmark", test_name])
     fps = None
     for a_line in out.splitlines():
         if a_line[:4] != "FPS:":
@@ -94,7 +108,11 @@ def run_glbench(test, test_names, test_fps):
     dim_1080 = ["-w", "1920", "-h", "1080", "-ow", "1920", "-oh", "1080"]
     dim_720 = ["-w", "1280", "-h", "720", "-ow", "1280", "-oh", "720"]
 
-    cmd = ["GLBenchmark.exe", "-skip_load_frames"]
+    glbench = "GLBenchmark.exe"
+    if platform.system() == "Linux":
+        glbench = "./GLBenchmark"
+    
+    cmd = [glbench, "-skip_load_frames"]
 
     if "720" in test:
         cmd = cmd + dim_720
@@ -103,7 +121,7 @@ def run_glbench(test, test_names, test_fps):
         cmd = cmd + dim_1080
 
     cur_dir = os.getcwd()
-    os.chdir("../GLBenchMark")
+    os.chdir("../GLBenchmark")
 
     result_file = "data/rw/last_results_2.7.0.xml"
     if os.path.exists(result_file):
@@ -131,7 +149,10 @@ def glbench(test_names, test_fps):
 
 
 def run_gputest(test, test_names, test_fps):
-    cmd = ["GpuTest.exe", "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
+    gputest = "GpuTest.exe"
+    if platform.system() == "Linux":
+        gputest = "./GpuTest"
+    cmd = [gputest, "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
            "/benchmark_duration_ms=10000", "/print_score", "/no_scorebox", "/test=" + test]
     cur_dir = os.getcwd()
     os.chdir("../GpuTest")
@@ -199,6 +220,8 @@ test_fps.append("blank_line")
 
 synmark(test_names, test_fps)
 while True:
-    test_name = test_names.pop[0]
-    fps = test_fps.pop[0]
+    if ! test_names:
+        break
+    test_name = test_names.pop(0)
+    fps = test_fps.pop(0)
     print test_name + "," + fps
