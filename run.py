@@ -54,25 +54,18 @@ def synmark(result_names, result_fps):
              "OglBatch5",
              "OglBatch6",
              "OglBatch7",
-             "OglCSCloth",
-             "OglCSDof",
              "OglDeferred",
              "OglDeferredAA",
              "OglDrvCtx",
              "OglDrvRes",
-             "OglDrvShComp",
-             "OglDrvState",
              "OglFillPixel",
              "OglFillTexMulti",
              "OglFillTexSingle",
-             "OglGSCloth",
              "OglGeomPoint",
              "OglGeomTriList",
              "OglGeomTriStrip",
              "OglHdrBloom",
              "OglMultithread",
-             "OglOclCloth",
-             "OglOclDof",
              "OglPSBump2",
              "OglPSBump8",
              "OglPSPhong",
@@ -80,9 +73,7 @@ def synmark(result_names, result_fps):
              "OglShMapPcf",
              "OglShMapVsm",
              "OglTerrainFlyInst",
-             "OglTerrainFlyTess",
              "OglTerrainPanInst",
-             "OglTerrainPanTess",
              "OglTexFilterAniso",
              "OglTexFilterTri",
              "OglTexMem128",
@@ -185,7 +176,7 @@ def run_gputest(test, test_names, test_fps):
     os.chdir(cur_dir)
 
 def gputest(test_names, test_fps):
-    for atest in ["fur", "pixmark_piano", "pixmark_volplosion", "plot3d", "triangle"]:
+    for atest in ["fur", "pixmark_piano", "pixmark_volplosion", "plot3d"]:
         run_gputest(atest, test_names, test_fps)
     
 _test_names = []
