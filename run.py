@@ -56,8 +56,6 @@ def synmark(result_names, result_fps):
              "OglBatch7",
              "OglDeferred",
              "OglDeferredAA",
-             "OglDrvCtx",
-             "OglDrvRes",
              "OglFillPixel",
              "OglFillTexMulti",
              "OglFillTexSingle",
