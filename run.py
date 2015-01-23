@@ -32,13 +32,7 @@ def run_synmark(test_name, result_names, result_fps):
     if platform.system() == "Linux":
         synmark_exe = "./synmark2"
 
-    cmd = [synmark_exe, "-synmark", test_name]
-
-    if platform.system() == "Linux":
-        cmd = ["taskset", "0x00000001"] + cmd
-
-    (out, _) = run_comand(cmd)
-
+    (out, _) = run_comand([synmark_exe, "-synmark", test_name])
     fps = None
     for a_line in out.splitlines():
         if a_line[:4] != "FPS:":
@@ -106,8 +100,6 @@ def run_glbench(test, test_names, test_fps):
         glbench_exe = "./GLBenchmark"
     
     cmd = [glbench_exe, "-skip_load_frames"]
-    if platform.system() == "Linux":
-        cmd = ["taskset", "0x00000001"] + cmd
 
     if "720" in test:
         cmd = cmd + dim_720
@@ -149,8 +141,6 @@ def run_gputest(test, test_names, test_fps):
         gputest_exe = "./GpuTest"
     cmd = [gputest_exe, "/fullscreen", "/width=1920", "/height=1080", "/benchmark", 
            "/benchmark_duration_ms=10000", "/print_score", "/no_scorebox", "/test=" + test]
-    if platform.system() == "Linux":
-        cmd = ["taskset", "0x00000001"] + cmd
     cur_dir = os.getcwd()
     os.chdir("../GpuTest")
     result_file = "_geeks3d_gputest_scores.csv"
