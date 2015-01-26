@@ -9,11 +9,21 @@ import xml.etree.ElementTree as ET
 
 print "running benchmarks"
 
-def run_comand(command_list):
+def run_comand(command_list, ld_path=None, add_env=None):
     time.sleep(2)
     env = dict(os.environ.items())
     if platform.system() == "Linux":
         env["vblank_mode"] = "0"
+        # for gfxbench
+        if ld_path and not "LD_LIBRARY_PATH" in env:
+            env["LD_LIBRARY_PATH"] = ""
+        if ld_path:
+            env["LD_LIBRARY_PATH"] = env["LD_LIBRARY_PATH"] + ":" + ld_path
+
+        if add_env:
+            for (k,v) in add_env.items():
+                env[k] = v        
+            
     p = subprocess.Popen(command_list,
                          env=env,
                          stdout=subprocess.PIPE, 
@@ -135,6 +145,33 @@ def glbench(test_names, test_fps):
         run_glbench(atest, test_names, test_fps)
 
 
+def run_gfxbench(atest, result_names, result_fps):
+    if platform.system() != "Linux":
+        result_names.append("atest")
+        result_fps.append("not run")
+    cur_dir = os.getcwd()
+    os.chdir("../gfxbench/out/build/linux/gfxbench_Release/mainapp")
+    ld_path = os.path.abspath("../../../../install/linux/lib")
+
+    add_env = {"MESA_GL_VERSION_OVERRIDE" : "4.1",
+               "MESA_GLSL_VERSION_OVERRIDE" :"400" }
+
+    cmd =  ["./mainapp", "-w", "1920", "-h", "1080", "-t", atest]
+    (out, _) = run_comand(cmd, ld_path=ld_path, add_env=add_env)
+    for aline in out:
+        if "fps" not in aline:
+            continue
+        tokens = aline.strip().split(":")
+        result_fps.append(tokens[1].strip())
+        result_names.append(atest)
+        return
+    os.chdir(cur_dir)
+        
+def gfxbench(test_names, test_fps):
+    tests = ["gl_manhattan", "gl_manhattan_off"]
+    for atest in tests:
+        run_gfxbench(atest, test_names, test_fps)
+
 def run_gputest(test, test_names, test_fps):
     gputest_exe = "GpuTest.exe"
     if platform.system() == "Linux":
@@ -179,6 +216,7 @@ def gputest(test_names, test_fps):
     
 _test_names = []
 _test_fps = []
+
 gputest(_test_names, _test_fps)
 
 _test_names.append("blank_line")
@@ -195,15 +233,10 @@ _test_fps.append("blank_line")
 
 glbench(_test_names, _test_fps)
 
-_test_names.append("blank_line")
-_test_fps.append("blank_line")
+gfxbench(_test_names, _test_fps)
 
 _test_names.append("blank_line")
 _test_fps.append("blank_line")
-
-_test_names.append("blank_line")
-_test_fps.append("blank_line")
-
 
 synmark(_test_names, _test_fps)
 while True:
